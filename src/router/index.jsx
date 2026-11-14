@@ -6,6 +6,7 @@ import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../components/layout/AdminLayout';
 import Dashboard from '../pages/Dashboard';
 import Orders from '../pages/Orders';
+import Products from '../pages/Products';
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/admin/dashboard" replace /> },
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'orders', element: <Orders /> },
+          { path: 'products', element: <Products /> },
         ],
       },
     ],

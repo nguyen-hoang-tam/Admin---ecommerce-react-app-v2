@@ -1,18 +1,51 @@
 import React from 'react';
-import { Row, Col, Card, Statistic, Typography, Table, Tag } from 'antd';
+import { Row, Col, Typography, Table, Tag } from 'antd';
 import {
   DollarOutlined,
   ShoppingCartOutlined,
-  UserOutlined,
   InboxOutlined,
-  ArrowUpOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
+import StatisticCard from '../components/dashboard/StatisticCard';
 
 const { Title, Text } = Typography;
 
 const Dashboard = () => {
   const { profile, user } = useSelector((state) => state.auth);
+
+  const statsList = [
+    {
+      key: 'revenue',
+      title: 'Tổng doanh thu',
+      value: 128500000,
+      precision: 0,
+      suffix: '₫',
+      prefix: <DollarOutlined style={{ color: '#3f8600' }} />,
+      valueStyle: { color: '#1a1a1a', fontWeight: 600 },
+    },
+    {
+      key: 'orders',
+      title: 'Tổng đơn hàng',
+      value: 1420,
+      prefix: <ShoppingCartOutlined style={{ color: '#1677ff' }} />,
+      valueStyle: { color: '#1a1a1a', fontWeight: 600 },
+    },
+    {
+      key: 'products',
+      title: 'Sản phẩm tồn kho',
+      value: 356,
+      prefix: <InboxOutlined style={{ color: '#fa8c16' }} />,
+      valueStyle: { color: '#1a1a1a', fontWeight: 600 },
+    },
+    {
+      key: 'customers',
+      title: 'Khách hàng',
+      value: 892,
+      prefix: <UserOutlined style={{ color: '#722ed1' }} />,
+      valueStyle: { color: '#1a1a1a', fontWeight: 600 },
+    },
+  ];
 
   const recentOrdersData = [
     {
@@ -99,76 +132,28 @@ const Dashboard = () => {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          Tổng quan Dashboard
+        <Title level={4} style={{ margin: 0, fontSize: 18 }}>
+          Dashboard
         </Title>
-        <Text type="secondary">
-          Chào mừng trở lại, {profile?.displayName || user?.displayName || user?.email || 'Admin'}!
-        </Text>
       </div>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} style={{ background: '#f6ffed', border: '1px solid #b7eb8f' }}>
-            <Statistic
-              title="Tổng doanh thu"
-              value={128500000}
-              precision={0}
-              suffix="₫"
-              prefix={<DollarOutlined />}
-              valueStyle={{ color: '#3f8600' }}
+        {statsList.map((stat) => (
+          <Col xs={24} sm={12} lg={6} key={stat.key}>
+            <StatisticCard
+              title={stat.title}
+              value={stat.value}
+              precision={stat.precision}
+              suffix={stat.suffix}
+              prefix={stat.prefix}
+              valueStyle={stat.valueStyle}
             />
-            <div style={{ marginTop: 8, fontSize: 13, color: '#3f8600' }}>
-              <ArrowUpOutlined /> +12.5% so với tháng trước
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} style={{ background: '#e6f4ff', border: '1px solid #91caff' }}>
-            <Statistic
-              title="Tổng đơn hàng"
-              value={1420}
-              prefix={<ShoppingCartOutlined />}
-              valueStyle={{ color: '#0958d9' }}
-            />
-            <div style={{ marginTop: 8, fontSize: 13, color: '#0958d9' }}>
-              <ArrowUpOutlined /> +8.2% tuần này
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} style={{ background: '#fff7e6', border: '1px solid #ffd591' }}>
-            <Statistic
-              title="Sản phẩm tồn kho"
-              value={356}
-              prefix={<InboxOutlined />}
-              valueStyle={{ color: '#d46b08' }}
-            />
-            <div style={{ marginTop: 8, fontSize: 13, color: '#8c8c8c' }}>
-              12 sản phẩm sắp hết hàng
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} style={{ background: '#f9f0ff', border: '1px solid #d3adf7' }}>
-            <Statistic
-              title="Khách hàng"
-              value={892}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#531dab' }}
-            />
-            <div style={{ marginTop: 8, fontSize: 13, color: '#531dab' }}>
-              <ArrowUpOutlined /> +24 khách mới hôm nay
-            </div>
-          </Card>
-        </Col>
+          </Col>
+        ))}
       </Row>
 
       <div style={{ marginTop: 32 }}>
-        <Title level={4} style={{ marginBottom: 16 }}>
+        <Title level={4} style={{ marginBottom: 16, fontSize: 18 }}>
           Đơn hàng gần đây
         </Title>
         <Table
@@ -182,4 +167,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

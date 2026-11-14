@@ -27,7 +27,6 @@ const Register = () => {
 
     try {
       await registerAPI(email, password, fullname);
-
       message.success('Đăng ký tài khoản thành công!');
       notification.info({
         message: 'Đăng ký thành công',

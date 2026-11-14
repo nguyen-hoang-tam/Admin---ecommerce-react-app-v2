@@ -4,10 +4,10 @@ import { UserOutlined, LockOutlined, GoogleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
-import { loginAPI, loginWithGoogleAPI, getUserProfile } from '../../features/auth/authAPI';
-import { authSuccess, setProfile } from '../../features/auth/authSlice';
-import bgImage from '../../assets/images/bg-login.png';
+import { auth } from '../lib/firebase';
+import { loginAPI, loginWithGoogleAPI, getUserProfile } from '../features/auth/authAPI';
+import { authSuccess, setProfile } from '../features/auth/authSlice';
+import bgImage from '../assets/images/bg-login.png';
 
 const { Title, Text, Link } = Typography;
 
