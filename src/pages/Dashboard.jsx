@@ -119,7 +119,11 @@ const Dashboard = () => {
           color = 'red';
           label = 'Đã hủy';
         }
-        return <Tag color={color}>{label}</Tag>;
+        return (
+          <Tag color={color} style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}>
+            {label}
+          </Tag>
+        );
       },
     },
     {

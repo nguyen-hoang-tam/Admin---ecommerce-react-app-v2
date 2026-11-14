@@ -7,7 +7,6 @@ import {
   Row,
   Col,
   Table,
-  Steps,
   Tooltip,
   Image,
   message,
@@ -26,34 +25,16 @@ import {
   HomeOutlined,
   ShoppingOutlined,
   DollarOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 
 const { Text } = Typography;
 
-const defaultMockItems = [
-  {
-    key: '1',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=80&q=80',
-    name: 'Áo thun basic',
-    variant: 'Trắng / L',
-    quantity: 2,
-    price: 250000,
-  },
-  {
-    key: '2',
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&q=80',
-    name: 'Giày thể thao nam',
-    variant: 'Trắng / 42',
-    quantity: 1,
-    price: 2450000,
-  },
-];
-
 const OrderDetailModal = ({ open, onClose, order }) => {
-  const orderId = order?.id || '0r9ZFHvKe15gQumtOEKS';
+  const orderId = order?.id || '—';
 
   const formatDate = (val) => {
-    if (!val) return '01/11/2026 15:22';
+    if (!val) return '—';
     if (typeof val === 'string' && val.includes('/')) return val;
     let date;
     if (typeof val.toDate === 'function') {
@@ -70,48 +51,40 @@ const OrderDetailModal = ({ open, onClose, order }) => {
 
   const orderDate = formatDate(order?.createdAt);
   const status = (order?.status || 'pending').toLowerCase();
+  const paymentMethod = order?.paymentMethod || 'Chưa xác định';
 
-  const customerEmail = order?.shippingAddress?.email || order?.shippingAddress?.name || 'tamtest02@gmail.com';
-  const customerPhone = order?.shippingAddress?.phone || '0901234567';
-  const shippingName = order?.shippingAddress?.name || 'Nguyễn Văn A';
-  const shippingAddress = order?.shippingAddress?.address || '123 Nguyễn Văn Cừ, Long Biên, Hà Nội';
+  const customerEmail =
+    order?.shippingAddress?.email ||
+    order?.customerEmail ||
+    order?.email ||
+    order?.userEmail ||
+    (order?.shippingAddress?.name?.includes('@') ? order?.shippingAddress?.name : '') ||
+    '—';
+  const customerPhone = order?.shippingAddress?.phone || order?.customerPhone || order?.phone || '—';
+  const shippingName = order?.shippingAddress?.name || order?.customerName || '—';
+  const shippingAddress = order?.shippingAddress?.address || '—';
 
-  const items = (order?.items && order.items.length > 0)
+  const items = Array.isArray(order?.items)
     ? order.items.map((item, idx) => ({
-        key: item.id || idx,
-        image: item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=80&q=80',
-        name: item.name || 'Sản phẩm',
-        variant: item.variant || item.brand || 'Mặc định',
-        quantity: item.quantity || 1,
-        price: item.price || 0,
-      }))
-    : defaultMockItems;
+      key: item.id || idx,
+      image: item.image || '',
+      name: item.name || 'Sản phẩm',
+      variant: item.variant || item.brand || '—',
+      quantity: Number(item.quantity) || 1,
+      price: Number(item.price) || 0,
+    }))
+    : [];
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0) || 2950000;
-  const shippingFee = order?.shippingFee ?? 50000;
-  const discount = order?.discount || 0;
-  const total = order?.total || 6950000;
-
-  const getStepInfo = () => {
-    if (status === 'cancelled') {
-      return { current: 1, stepStatus: 'error' };
-    }
-    if (status === 'success' || status === 'completed') {
-      return { current: 3, stepStatus: 'finish' };
-    }
-    if (status === 'processing') {
-      return { current: 2, stepStatus: 'process' };
-    }
-    return { current: 1, stepStatus: 'process' };
-  };
-
-  const { current: currentStep, stepStatus } = getStepInfo();
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shippingFee = Number(order?.shippingFee) || 0;
+  const discount = Number(order?.discount) || 0;
+  const total = order?.total !== undefined ? Number(order.total) : subtotal + shippingFee - discount;
 
   const renderStatusTag = () => {
     if (status === 'pending') {
       return (
         <Tag
-          color="processing"
+          color="orange"
           icon={<ClockCircleOutlined />}
           style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
         >
@@ -122,28 +95,28 @@ const OrderDetailModal = ({ open, onClose, order }) => {
     if (status === 'success' || status === 'completed') {
       return (
         <Tag
-          color="success"
+          color="green"
           icon={<CheckCircleOutlined />}
           style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
         >
-          Hoàn thành
+          Thành công
         </Tag>
       );
     }
     if (status === 'processing') {
       return (
         <Tag
-          color="warning"
+          color="blue"
           icon={<SyncOutlined spin />}
           style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
         >
-          Đang giao
+          Đang xử lý
         </Tag>
       );
     }
     return (
       <Tag
-        color="error"
+        color="red"
         icon={<CloseCircleOutlined />}
         style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
       >
@@ -205,8 +178,10 @@ const OrderDetailModal = ({ open, onClose, order }) => {
   ];
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(orderId);
-    message.success('Đã sao chép mã đơn hàng');
+    if (orderId && orderId !== '—') {
+      navigator.clipboard.writeText(orderId);
+      message.success('Đã sao chép mã đơn hàng');
+    }
   };
 
   return (
@@ -223,6 +198,12 @@ const OrderDetailModal = ({ open, onClose, order }) => {
       footer={[
         <Button key="close" onClick={onClose} style={{ minWidth: 80 }}>
           Đóng
+        </Button>,
+        <Button icon={<CloseCircleOutlined />} type='primary' danger key="close" onClick={onClose} style={{ minWidth: 80 }}>
+          Từ chối
+        </Button>,
+        <Button icon={<CheckOutlined />} type='primary' key="close" onClick={onClose} style={{ minWidth: 80, backgroundColor: '#52c41a' }}>
+          Xác nhận
         </Button>,
       ]}
     >
@@ -247,14 +228,16 @@ const OrderDetailModal = ({ open, onClose, order }) => {
               <Text strong style={{ fontSize: 15 }}>
                 {orderId}
               </Text>
-              <Tooltip title="Sao chép">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CopyOutlined style={{ color: '#1677ff' }} />}
-                  onClick={handleCopy}
-                />
-              </Tooltip>
+              {orderId !== '—' && (
+                <Tooltip title="Sao chép">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<CopyOutlined style={{ color: '#1677ff' }} />}
+                    onClick={handleCopy}
+                  />
+                </Tooltip>
+              )}
             </div>
           </div>
 
@@ -265,7 +248,22 @@ const OrderDetailModal = ({ open, onClose, order }) => {
             <div style={{ fontSize: 14 }}>{orderDate}</div>
           </div>
 
-          <div>{renderStatusTag()}</div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Thanh toán
+            </Text>
+            <div>
+              <Tag color="geekblue" style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}>
+                {paymentMethod}
+              </Tag>
+            </div>
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Trạng thái
+            </Text>
+            <div>{renderStatusTag()}</div>
+          </div>
         </div>
 
         <Row gutter={16} style={{ marginBottom: 20 }}>
@@ -336,26 +334,6 @@ const OrderDetailModal = ({ open, onClose, order }) => {
           </Col>
         </Row>
 
-        <div style={{ margin: '24px 0 28px 0', padding: '0 12px' }}>
-          <Steps
-            current={currentStep}
-            status={stepStatus}
-            size="small"
-            items={[
-              { title: 'Đặt hàng' },
-              {
-                title: 'Xác nhận',
-                description:
-                  status === 'pending' ? (
-                    <Text style={{ color: '#1677ff', fontSize: 12 }}>Chờ xử lý</Text>
-                  ) : undefined,
-              },
-              { title: 'Đang giao' },
-              { title: 'Hoàn thành' },
-            ]}
-          />
-        </div>
-
         <div
           style={{
             display: 'flex',
@@ -364,20 +342,6 @@ const OrderDetailModal = ({ open, onClose, order }) => {
             marginBottom: 12,
           }}
         >
-          <div
-            style={{
-              fontWeight: 600,
-              fontSize: 14,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <ShoppingOutlined /> Sản phẩm trong đơn hàng
-          </div>
-          <Tag style={{ borderRadius: 10, background: '#f5f5f5', color: '#595959', border: 'none' }}>
-            {items.length} sản phẩm
-          </Tag>
         </div>
 
         <Table
@@ -474,3 +438,4 @@ const OrderDetailModal = ({ open, onClose, order }) => {
 };
 
 export default OrderDetailModal;
+

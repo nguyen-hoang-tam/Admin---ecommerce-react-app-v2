@@ -5,61 +5,61 @@ import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutli
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const initialProducts = [
-  {
-    key: '1',
-    code: 'PRD-001',
-    name: 'Áo Thun Nam Basic Cotton',
-    category: 'Thời trang nam',
-    price: 199000,
-    stock: 120,
-    status: 'IN_STOCK',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&q=80',
-  },
-  {
-    key: '2',
-    code: 'PRD-002',
-    name: 'Quần Jean Slim Fit Co Giãn',
-    category: 'Thời trang nam',
-    price: 450000,
-    stock: 45,
-    status: 'IN_STOCK',
-    image: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=100&q=80',
-  },
-  {
-    key: '3',
-    code: 'PRD-003',
-    name: 'Váy Nữ Dáng Xòe Vintage',
-    category: 'Thời trang nữ',
-    price: 380000,
-    stock: 8,
-    status: 'LOW_STOCK',
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=100&q=80',
-  },
-  {
-    key: '4',
-    code: 'PRD-004',
-    name: 'Áo Khoác Bomber Unisex',
-    category: 'Áo khoác',
-    price: 620000,
-    stock: 0,
-    status: 'OUT_OF_STOCK',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&q=80',
-  },
-  {
-    key: '5',
-    code: 'PRD-005',
-    name: 'Giày Sneaker Thể Thao Trắng',
-    category: 'Giày dép',
-    price: 890000,
-    stock: 62,
-    status: 'IN_STOCK',
-    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&q=80',
-  },
-];
+// const initialProducts = [
+//   {
+//     key: '1',
+//     code: 'PRD-001',
+//     name: 'Áo Thun Nam Basic Cotton',
+//     category: 'Thời trang nam',
+//     price: 199000,
+//     stock: 120,
+//     status: 'IN_STOCK',
+//     image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&q=80',
+//   },
+//   {
+//     key: '2',
+//     code: 'PRD-002',
+//     name: 'Quần Jean Slim Fit Co Giãn',
+//     category: 'Thời trang nam',
+//     price: 450000,
+//     stock: 45,
+//     status: 'IN_STOCK',
+//     image: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=100&q=80',
+//   },
+//   {
+//     key: '3',
+//     code: 'PRD-003',
+//     name: 'Váy Nữ Dáng Xòe Vintage',
+//     category: 'Thời trang nữ',
+//     price: 380000,
+//     stock: 8,
+//     status: 'LOW_STOCK',
+//     image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=100&q=80',
+//   },
+//   {
+//     key: '4',
+//     code: 'PRD-004',
+//     name: 'Áo Khoác Bomber Unisex',
+//     category: 'Áo khoác',
+//     price: 620000,
+//     stock: 0,
+//     status: 'OUT_OF_STOCK',
+//     image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&q=80',
+//   },
+//   {
+//     key: '5',
+//     code: 'PRD-005',
+//     name: 'Giày Sneaker Thể Thao Trắng',
+//     category: 'Giày dép',
+//     price: 890000,
+//     stock: 62,
+//     status: 'IN_STOCK',
+//     image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&q=80',
+//   },
+// ];
 
 const Products = () => {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
 
@@ -141,13 +141,14 @@ const Products = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => {
+        const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12 };
         if (status === 'IN_STOCK') {
-          return <Tag color="green">Còn hàng</Tag>;
+          return <Tag color="green" style={tagStyle}>Còn hàng</Tag>;
         }
         if (status === 'LOW_STOCK') {
-          return <Tag color="orange">Sắp hết</Tag>;
+          return <Tag color="orange" style={tagStyle}>Sắp hết</Tag>;
         }
-        return <Tag color="red">Hết hàng</Tag>;
+        return <Tag color="red" style={tagStyle}>Hết hàng</Tag>;
       },
     },
     {
