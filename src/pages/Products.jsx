@@ -5,7 +5,6 @@ import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutli
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// const initialProducts = [
 //   {
 //     key: '1',
 //     code: 'PRD-001',

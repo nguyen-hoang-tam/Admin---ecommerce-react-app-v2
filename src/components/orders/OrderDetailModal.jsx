@@ -199,12 +199,6 @@ const OrderDetailModal = ({ open, onClose, order }) => {
         <Button key="close" onClick={onClose} style={{ minWidth: 80 }}>
           Đóng
         </Button>,
-        <Button icon={<CloseCircleOutlined />} type='primary' danger key="close" onClick={onClose} style={{ minWidth: 80 }}>
-          Từ chối
-        </Button>,
-        <Button icon={<CheckOutlined />} type='primary' key="close" onClick={onClose} style={{ minWidth: 80, backgroundColor: '#52c41a' }}>
-          Xác nhận
-        </Button>,
       ]}
     >
       <div style={{ padding: '8px 0' }}>

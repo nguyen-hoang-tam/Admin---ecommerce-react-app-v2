@@ -4,7 +4,7 @@ import { SearchOutlined, ReloadOutlined, CheckOutlined, CloseOutlined, CopyOutli
 import OrderDetailModal from '../components/orders/OrderDetailModal';
 
 import { db } from '../lib/firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, } from 'firebase/firestore';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -32,6 +32,7 @@ const Orders = () => {
       });
 
       setOrders(ordersData);
+      console.log(JSON.stringify(ordersData, null, 2));
     } catch (error) {
       console.error("Lỗi fetch data: ", error);
       message.error("Không thể tải danh sách đơn hàng!");
@@ -339,6 +340,7 @@ const Orders = () => {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         order={selectedOrder}
+        confirm={handleUpdateStatus}
       />
     </div>
   );
