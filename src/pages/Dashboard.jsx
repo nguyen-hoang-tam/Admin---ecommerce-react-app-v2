@@ -120,7 +120,11 @@ const Dashboard = () => {
           label = 'Đã hủy';
         }
         return (
-          <Tag color={color} style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}>
+          <Tag
+            bordered={false}
+            color={color}
+            style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+          >
             {label}
           </Tag>
         );

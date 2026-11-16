@@ -1,74 +1,54 @@
-import React, { useState } from 'react';
-import { Table, Tag, Typography, Space, Button, Input, Select, Image } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Tag, Typography, Space, Button, Input, Select, Image, message } from 'antd';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+
+import { db } from '../lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-//   {
-//     key: '1',
-//     code: 'PRD-001',
-//     name: 'Áo Thun Nam Basic Cotton',
-//     category: 'Thời trang nam',
-//     price: 199000,
-//     stock: 120,
-//     status: 'IN_STOCK',
-//     image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&q=80',
-//   },
-//   {
-//     key: '2',
-//     code: 'PRD-002',
-//     name: 'Quần Jean Slim Fit Co Giãn',
-//     category: 'Thời trang nam',
-//     price: 450000,
-//     stock: 45,
-//     status: 'IN_STOCK',
-//     image: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=100&q=80',
-//   },
-//   {
-//     key: '3',
-//     code: 'PRD-003',
-//     name: 'Váy Nữ Dáng Xòe Vintage',
-//     category: 'Thời trang nữ',
-//     price: 380000,
-//     stock: 8,
-//     status: 'LOW_STOCK',
-//     image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=100&q=80',
-//   },
-//   {
-//     key: '4',
-//     code: 'PRD-004',
-//     name: 'Áo Khoác Bomber Unisex',
-//     category: 'Áo khoác',
-//     price: 620000,
-//     stock: 0,
-//     status: 'OUT_OF_STOCK',
-//     image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&q=80',
-//   },
-//   {
-//     key: '5',
-//     code: 'PRD-005',
-//     name: 'Giày Sneaker Thể Thao Trắng',
-//     category: 'Giày dép',
-//     price: 890000,
-//     stock: 62,
-//     status: 'IN_STOCK',
-//     image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&q=80',
-//   },
-// ];
-
 const Products = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
 
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const productsData = [];
+      const querySnapshot = await getDocs(collection(db, 'products'));
+
+      querySnapshot.forEach((doc) => {
+        productsData.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      setProducts(productsData);
+      console.log(JSON.stringify(productsData, null, 2));
+    } catch (error) {
+      console.error("Lỗi fetch data: ", error);
+      message.error("Không thể tải danh sách sản phẩm!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+
   const handleFilter = (search, category) => {
-    let filtered = initialProducts;
+    let filtered = products;
     if (search.trim()) {
       filtered = filtered.filter(
         (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.code.toLowerCase().includes(search.toLowerCase())
+          p.name?.toLowerCase().includes(search.toLowerCase()) ||
+          p.brand?.toLowerCase().includes(search.toLowerCase())
       );
     }
     if (category !== 'ALL') {
@@ -90,15 +70,10 @@ const Products = () => {
 
   const columns = [
     {
-      title: 'Mã SP',
-      dataIndex: 'code',
-      key: 'code',
-      render: (text) => <Text strong>{text}</Text>,
-    },
-    {
       title: 'Hình ảnh',
       dataIndex: 'image',
       key: 'image',
+      width: 100,
       render: (src) => (
         <Image
           src={src}
@@ -116,10 +91,13 @@ const Products = () => {
       render: (text, record) => (
         <div>
           <Text strong>{text}</Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {record.category}
-          </Text>
+          {record.category && (
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {record.category}
+              </Text>
+            </div>
+          )}
         </div>
       ),
     },
@@ -127,36 +105,40 @@ const Products = () => {
       title: 'Giá bán',
       dataIndex: 'price',
       key: 'price',
-      render: (val) => `${val.toLocaleString('vi-VN')} ₫`,
+      width: 160,
+      render: (val) => `${Number(val || 0).toLocaleString('vi-VN')} ₫`,
     },
     {
-      title: 'Tồn kho',
-      dataIndex: 'stock',
-      key: 'stock',
-      align: 'center',
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12 };
-        if (status === 'IN_STOCK') {
-          return <Tag color="green" style={tagStyle}>Còn hàng</Tag>;
-        }
-        if (status === 'LOW_STOCK') {
-          return <Tag color="orange" style={tagStyle}>Sắp hết</Tag>;
-        }
-        return <Tag color="red" style={tagStyle}>Hết hàng</Tag>;
+      title: 'Brand',
+      dataIndex: 'brand',
+      key: 'brand',
+      width: 160,
+      render: (brand) => {
+        const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' };
+        return (
+          <Tag bordered={false} color="geekblue" style={tagStyle}>
+            {brand || 'Khác'}
+          </Tag>
+        );
       },
     },
     {
       title: 'Hành động',
       key: 'action',
+      width: 200,
+      align: 'center',
       render: () => (
-        <Space size="middle">
-          <Button type="text" icon={<EditOutlined style={{ color: '#1677ff' }} />} />
-          <Button type="text" danger icon={<DeleteOutlined />} />
+        <Space size="small">
+          <Button
+            type="default"
+            icon={<EditOutlined style={{ color: '#040404ff' }} />}
+            style={{ backgroundColor: '#ffffff', borderColor: '#d9d9d9' }}
+          >
+            Sửa
+          </Button>
+          <Button type="primary" danger icon={<DeleteOutlined />}>
+            Xóa
+          </Button>
         </Space>
       ),
     },
@@ -170,7 +152,7 @@ const Products = () => {
         </Title>
         <Space wrap size="middle">
           <Input
-            placeholder="Tìm theo tên hoặc mã SP..."
+            placeholder="Tìm theo tên sản phẩm..."
             prefix={<SearchOutlined />}
             value={searchTerm}
             onChange={onSearchChange}
@@ -193,7 +175,7 @@ const Products = () => {
             onClick={() => {
               setSearchTerm('');
               setCategoryFilter('ALL');
-              setProducts(initialProducts);
+              fetchProducts();
             }}
           >
             Làm mới
@@ -205,9 +187,10 @@ const Products = () => {
       </div>
 
       <Table
+        loading={loading}
         columns={columns}
         dataSource={products}
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 7 }}
       />
     </div>
   );

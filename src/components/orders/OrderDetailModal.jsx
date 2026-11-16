@@ -84,9 +84,10 @@ const OrderDetailModal = ({ open, onClose, order }) => {
     if (status === 'pending') {
       return (
         <Tag
+          bordered={false}
           color="orange"
           icon={<ClockCircleOutlined />}
-          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
+          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
         >
           Chờ xử lý
         </Tag>
@@ -95,9 +96,10 @@ const OrderDetailModal = ({ open, onClose, order }) => {
     if (status === 'success' || status === 'completed') {
       return (
         <Tag
+          bordered={false}
           color="green"
           icon={<CheckCircleOutlined />}
-          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
+          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
         >
           Thành công
         </Tag>
@@ -106,9 +108,10 @@ const OrderDetailModal = ({ open, onClose, order }) => {
     if (status === 'processing') {
       return (
         <Tag
+          bordered={false}
           color="blue"
           icon={<SyncOutlined spin />}
-          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
+          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
         >
           Đang xử lý
         </Tag>
@@ -116,9 +119,10 @@ const OrderDetailModal = ({ open, onClose, order }) => {
     }
     return (
       <Tag
+        bordered={false}
         color="red"
         icon={<CloseCircleOutlined />}
-        style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}
+        style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
       >
         Đã hủy
       </Tag>
@@ -247,7 +251,11 @@ const OrderDetailModal = ({ open, onClose, order }) => {
               Thanh toán
             </Text>
             <div>
-              <Tag color="geekblue" style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}>
+              <Tag
+                bordered={false}
+                color="geekblue"
+                style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+              >
                 {paymentMethod}
               </Tag>
             </div>

@@ -98,12 +98,12 @@ const Orders = () => {
 
   const renderStatusTag = (status) => {
     const s = String(status || '').toLowerCase();
-    const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12 };
-    if (s === 'pending') return <Tag color="orange" style={tagStyle}>Chờ xử lý</Tag>;
-    if (s === 'success' || s === 'completed') return <Tag color="green" style={tagStyle}>Thành công</Tag>;
-    if (s === 'processing') return <Tag color="blue" style={tagStyle}>Đang xử lý</Tag>;
-    if (s === 'cancelled') return <Tag color="red" style={tagStyle}>Đã hủy</Tag>;
-    return <Tag color="default" style={tagStyle}>{status}</Tag>;
+    const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' };
+    if (s === 'pending') return <Tag bordered={false} color="orange" style={tagStyle}>Chờ xử lý</Tag>;
+    if (s === 'success' || s === 'completed') return <Tag bordered={false} color="green" style={tagStyle}>Thành công</Tag>;
+    if (s === 'processing') return <Tag bordered={false} color="blue" style={tagStyle}>Đang xử lý</Tag>;
+    if (s === 'cancelled') return <Tag bordered={false} color="red" style={tagStyle}>Đã hủy</Tag>;
+    return <Tag bordered={false} color="default" style={tagStyle}>{status}</Tag>;
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -211,7 +211,11 @@ const Orders = () => {
       key: 'paymentMethod',
       width: 170,
       render: (method) => (
-        <Tag color="geekblue" style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12 }}>
+        <Tag
+          bordered={false}
+          color="geekblue"
+          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+        >
           {method || 'Chưa xác định'}
         </Tag>
       ),
