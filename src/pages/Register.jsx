@@ -3,8 +3,8 @@ import { Form, Input, Button, Typography, message, Alert, Divider, notification 
 import { UserOutlined, LockOutlined, MailOutlined, GoogleOutlined } from '@ant-design/icons';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { registerAPI, loginWithGoogleAPI } from '@/features/auth/authAPI';
-import bgImage from '@/assets/images/bg-login.png';
+import { registerAPI, loginWithGoogleAPI } from '../features/auth/authAPI';
+import bgImage from '../assets/images/bg-login.png';
 
 const { Title, Link } = Typography;
 

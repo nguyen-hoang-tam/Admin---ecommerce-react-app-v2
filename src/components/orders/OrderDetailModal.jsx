@@ -81,13 +81,14 @@ const OrderDetailModal = ({ open, onClose, order }) => {
   const total = order?.total !== undefined ? Number(order.total) : subtotal + shippingFee - discount;
 
   const renderStatusTag = () => {
+    const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none', color: '#fff', fontWeight: 500 };
     if (status === 'pending') {
       return (
         <Tag
           bordered={false}
-          color="orange"
-          icon={<ClockCircleOutlined />}
-          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+          color="#fa8c16"
+          icon={<ClockCircleOutlined style={{ color: '#fff' }} />}
+          style={tagStyle}
         >
           Chờ xử lý
         </Tag>
@@ -97,9 +98,9 @@ const OrderDetailModal = ({ open, onClose, order }) => {
       return (
         <Tag
           bordered={false}
-          color="green"
-          icon={<CheckCircleOutlined />}
-          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+          color="#52c41a"
+          icon={<CheckCircleOutlined style={{ color: '#fff' }} />}
+          style={tagStyle}
         >
           Thành công
         </Tag>
@@ -109,9 +110,9 @@ const OrderDetailModal = ({ open, onClose, order }) => {
       return (
         <Tag
           bordered={false}
-          color="blue"
-          icon={<SyncOutlined spin />}
-          style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+          color="#1677ff"
+          icon={<SyncOutlined spin style={{ color: '#fff' }} />}
+          style={tagStyle}
         >
           Đang xử lý
         </Tag>
@@ -120,9 +121,9 @@ const OrderDetailModal = ({ open, onClose, order }) => {
     return (
       <Tag
         bordered={false}
-        color="red"
-        icon={<CloseCircleOutlined />}
-        style={{ padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none' }}
+        color="#ff4d4f"
+        icon={<CloseCircleOutlined style={{ color: '#fff' }} />}
+        style={tagStyle}
       >
         Đã hủy
       </Tag>

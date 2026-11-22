@@ -8,7 +8,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '@/lib/firebase';
+import { auth, db, googleProvider } from '../../lib/firebase';
 
 export const registerAPI = async (email, password, name) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);

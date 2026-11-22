@@ -5,8 +5,8 @@ import Register from '../pages/Register';
 import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../components/layout/AdminLayout';
 import Dashboard from '../pages/Dashboard';
-import Orders from '../pages/Orders';
-import Products from '../pages/Products';
+import OrderManagement from '../pages/OrderManagement';
+import ProductManagement from '../pages/ProductManagement';
 
 export const router = createBrowserRouter([
   {
@@ -26,8 +26,8 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/admin/dashboard" replace /> },
           { path: 'dashboard', element: <Dashboard /> },
-          { path: 'orders', element: <Orders /> },
-          { path: 'products', element: <Products /> },
+          { path: 'orders', element: <OrderManagement /> },
+          { path: 'products', element: <ProductManagement /> },
         ],
       },
     ],

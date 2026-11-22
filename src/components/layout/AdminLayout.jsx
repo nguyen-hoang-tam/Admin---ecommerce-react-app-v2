@@ -34,12 +34,12 @@ const AdminLayout = () => {
     {
       key: '/admin/orders',
       icon: <ShoppingCartOutlined />,
-      label: 'Orders',
+      label: 'Quản lý đơn hàng',
     },
     {
       key: '/admin/products',
       icon: <AppstoreOutlined />,
-      label: 'Products',
+      label: 'Quản lý sản phẩm',
     },
   ];
 
@@ -87,8 +87,8 @@ const AdminLayout = () => {
   };
 
   const getPageTitle = () => {
-    if (location.pathname.includes('products')) return 'Products';
-    if (location.pathname.includes('orders')) return 'Orders';
+    if (location.pathname.includes('products')) return 'Quản lý sản phẩm';
+    if (location.pathname.includes('orders')) return 'Quản lý đơn hàng';
     return 'Dashboard';
   };
 
@@ -136,14 +136,7 @@ const AdminLayout = () => {
 
       <Content style={{ padding: '0 48px' }}>
         <Breadcrumb style={{ margin: '16px 0' }} items={breadcrumbItems} />
-        <div
-          style={{
-            padding: 24,
-            minHeight: 'calc(100vh - 180px)',
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
-        >
+        <div style={{ minHeight: 'calc(100vh - 180px)' }}>
           <Outlet />
         </div>
       </Content>
