@@ -1,17 +1,25 @@
 import React from 'react';
-import { Card, Typography, Divider, Button, Popconfirm, Empty, Image, Tag, Space } from 'antd';
-import {
-  EditOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import { Card, Typography, Divider, Button, Popconfirm, Empty, Image, Tag } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
-const ProductSummaryCard = ({
-  product,
-  onEdit,
-  onDelete,
-}) => {
+const RowItem = ({ label, value, strong }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text type="secondary" style={{ fontSize: 14 }}>
+      {label}
+    </Text>
+    {typeof value === 'string' || typeof value === 'number' ? (
+      <Text strong={strong} style={{ fontSize: 14 }}>
+        {value}
+      </Text>
+    ) : (
+      value
+    )}
+  </div>
+);
+
+const ProductSummaryCard = ({ product, onEdit, onDelete }) => {
   if (!product) {
     return (
       <Card
@@ -29,6 +37,7 @@ const ProductSummaryCard = ({
     );
   }
 
+  const isOutOfStock = product.stock === 0 || product.status === 'inactive';
   const tagStyle = {
     padding: '4px 12px',
     fontSize: 13,
@@ -38,21 +47,17 @@ const ProductSummaryCard = ({
     fontWeight: 500,
   };
 
-  const isOutOfStock = product.stock === 0 || product.status === 'inactive';
-
   const formatDate = (val) => {
     if (!val) return '—';
-    let date;
-    if (typeof val.toDate === 'function') {
-      date = val.toDate();
-    } else if (val.seconds) {
-      date = new Date(val.seconds * 1000);
-    } else {
-      date = new Date(val);
-    }
+    const date = typeof val.toDate === 'function'
+      ? val.toDate()
+      : val.seconds
+        ? new Date(val.seconds * 1000)
+        : new Date(val);
     if (isNaN(date.getTime())) return String(val);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}/${month}/${date.getFullYear()}`;
   };
 
   return (
@@ -66,14 +71,7 @@ const ProductSummaryCard = ({
       }}
       styles={{ body: { padding: 24 } }}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Title level={5} style={{ margin: 0, fontWeight: 700 }}>
           Thông tin sản phẩm
         </Title>
@@ -100,49 +98,29 @@ const ProductSummaryCard = ({
       </div>
 
       <div>
-        <div
-          style={{
-            fontWeight: 700,
-            fontSize: 16,
-            color: '#1a1a1a',
-            lineHeight: 1.4,
-            marginBottom: 4,
-          }}
-        >
+        <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a1a', lineHeight: 1.4, marginBottom: 4 }}>
           {product.name}
         </div>
         <div style={{ color: '#8c8c8c', fontSize: 13 }}>
-          {product.category ? `${product.category} • ` : ''}{product.brand || 'Chưa phân loại'}
+          {product.category ? `${product.category} • ` : ''}
+          {product.brand || 'Chưa phân loại'}
         </div>
       </div>
 
       <Divider style={{ margin: '16px 0' }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Tồn kho</Text>
-          <Text strong style={{ fontSize: 14 }}>{product.stock !== undefined ? product.stock : 0}</Text>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Đã bán</Text>
-          <Text style={{ fontSize: 14 }}>{product.sold || 0}</Text>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Trạng thái</Text>
-          {isOutOfStock ? (
-            <Tag bordered={false} color="#ff4d4f" style={tagStyle}>
-              Hết hàng
+        <RowItem label="Tồn kho" value={product.stock !== undefined ? product.stock : 0} strong />
+        <RowItem label="Đã bán" value={product.sold || 0} />
+        <RowItem
+          label="Trạng thái"
+          value={
+            <Tag bordered={false} color={isOutOfStock ? '#ff4d4f' : '#52c41a'} style={tagStyle}>
+              {isOutOfStock ? 'Hết hàng' : 'Còn hàng'}
             </Tag>
-          ) : (
-            <Tag bordered={false} color="#52c41a" style={tagStyle}>
-              Còn hàng
-            </Tag>
-          )}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Ngày tạo</Text>
-          <Text style={{ fontSize: 14 }}>{formatDate(product.createdAt)}</Text>
-        </div>
+          }
+        />
+        <RowItem label="Ngày tạo" value={formatDate(product.createdAt)} />
       </div>
 
       <Divider style={{ margin: '16px 0' }} />
@@ -164,7 +142,7 @@ const ProductSummaryCard = ({
           onClick={() => onEdit && onEdit(product)}
           style={{
             flex: 1,
-            backgroundColor: '#ffffff',
+            backgroundColor: '#fff',
             borderColor: '#d9d9d9',
             borderRadius: 8,
           }}
@@ -180,13 +158,7 @@ const ProductSummaryCard = ({
           cancelText="Hủy"
           okButtonProps={{ danger: true }}
         >
-          <Button
-            type="primary"
-            danger
-            size="large"
-            icon={<DeleteOutlined />}
-            style={{ flex: 1, borderRadius: 8 }}
-          >
+          <Button type="primary" danger size="large" icon={<DeleteOutlined />} style={{ flex: 1, borderRadius: 8 }}>
             Xóa
           </Button>
         </Popconfirm>

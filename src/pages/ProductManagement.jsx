@@ -1,144 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Table,
-  Tag,
-  Typography,
-  Space,
-  Button,
-  Input,
-  Select,
-  Image,
-  message,
-  Card,
-  Popconfirm,
-  Tooltip,
-} from 'antd';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-} from '@ant-design/icons';
+import { Table, Tag, Typography, Space, Button, Input, Select, Image, message, Card, Popconfirm } from 'antd';
+import { SearchOutlined, PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 import { db } from '../lib/firebase';
-import { collection, getDocs, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 
 import AddProductModal from '../components/modal/AddProductModal';
+import JsonViewer from '../components/common/JsonViewer';
+import { addProductAPI } from '../features/addProduct/product';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-const syntaxHighlight = (jsonStr) => {
-  if (!jsonStr) return '';
-  const escaped = jsonStr
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  return escaped.replace(
-    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-    (match) => {
-      let color = '#0969da';
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          color = '#24292f';
-        } else {
-          color = '#8250df';
-        }
-      } else if (/true|false/.test(match)) {
-        color = '#0550ae';
-      } else if (/null/.test(match)) {
-        color = '#6e7781';
-      } else {
-        color = '#cf222e';
-      }
-      return `<span style="color:${color}">${match}</span>`;
-    }
-  );
-};
-
-const ProductJsonViewer = ({ record }) => {
-  const [searchProperty, setSearchProperty] = useState('');
-
-  const displayData = useMemo(() => {
-    const raw = { ...record };
-    delete raw.key;
-    if (!searchProperty.trim()) return raw;
-    const term = searchProperty.toLowerCase();
-    const result = {};
-    Object.entries(raw).forEach(([k, v]) => {
-      if (k.toLowerCase().includes(term) || JSON.stringify(v).toLowerCase().includes(term)) {
-        result[k] = v;
-      }
-    });
-    return result;
-  }, [record, searchProperty]);
-
-  const jsonString = useMemo(() => {
-    return JSON.stringify(displayData, null, 2);
-  }, [displayData]);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(jsonString);
-    message.success('Đã sao chép JSON vào clipboard!');
-  };
-
-  return (
-    <div style={{ padding: '12px 16px', backgroundColor: '#fcfcfc', borderRadius: 8 }}>
-      <div style={{ marginBottom: 12 }}>
-        <Input
-          placeholder="Search properties..."
-          prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-          value={searchProperty}
-          onChange={(e) => setSearchProperty(e.target.value)}
-          style={{ width: 260, borderRadius: 6 }}
-          allowClear
-          size="middle"
-        />
-      </div>
-
-      <div
-        style={{
-          position: 'relative',
-          backgroundColor: '#ffffff',
-          border: '1px solid #e1e4e8',
-          borderRadius: 8,
-          padding: '16px 20px',
-        }}
-      >
-        <Tooltip title="Sao chép JSON">
-          <Button
-            type="text"
-            size="small"
-            icon={<CopyOutlined style={{ color: '#595959' }} />}
-            onClick={handleCopy}
-            style={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              zIndex: 2,
-            }}
-          />
-        </Tooltip>
-
-        <pre
-          style={{
-            margin: 0,
-            fontSize: 13,
-            lineHeight: 1.6,
-            fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace',
-            maxHeight: 380,
-            overflowY: 'auto',
-            overflowX: 'auto',
-          }}
-        >
-          <code dangerouslySetInnerHTML={{ __html: syntaxHighlight(jsonString) }} />
-        </pre>
-      </div>
-    </div>
-  );
-};
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -198,21 +70,20 @@ const ProductManagement = () => {
 
   const handleAddProduct = async (values) => {
     try {
-      await addDoc(collection(db, 'products'), {
-        name: values.name,
-        brand: values.brand,
-        price: Number(values.price) || 0,
-        image: values.image || '',
-        stock: values.stock !== undefined ? Number(values.stock) || 0 : 0,
-        sold: 0,
-        status: values.status || 'active',
-        createdAt: serverTimestamp(),
-      });
+      await addProductAPI(values);
       message.success('Thêm sản phẩm thành công!');
       fetchProducts();
+      return true;
     } catch (error) {
       console.error('Lỗi thêm sản phẩm: ', error);
-      message.error('Không thể thêm sản phẩm!');
+      if (error?.code === 'permission-denied') {
+        message.error('Lỗi phân quyền Firestore: Bạn không có quyền thêm sản phẩm (permission-denied)! Vui lòng kiểm tra Firestore Rules.');
+      } else if (error?.message && error.message.includes('maximum allowed size')) {
+        message.error('Lỗi: Kích thước hình ảnh quá lớn vượt quá giới hạn 1MB của Firestore!');
+      } else {
+        message.error(`Không thể thêm sản phẩm: ${error?.message || error?.code || 'Lỗi không xác định'}`);
+      }
+      throw error;
     }
   };
 
@@ -540,7 +411,7 @@ const ProductManagement = () => {
             showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng ${total} sản phẩm`,
           }}
           expandable={{
-            expandedRowRender: (record) => <ProductJsonViewer record={record} />,
+            expandedRowRender: (record) => <JsonViewer data={record} />,
             rowExpandable: () => true,
           }}
           scroll={{ x: 1200 }}
@@ -551,6 +422,7 @@ const ProductManagement = () => {
         open={addModalVisible}
         onClose={() => setAddModalVisible(false)}
         onSubmit={handleAddProduct}
+        categories={categories}
       />
     </div>
   );

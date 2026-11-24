@@ -1,19 +1,23 @@
 import React, { useMemo } from 'react';
 import { Card, Typography, Divider, Button, Popconfirm, Empty, Image } from 'antd';
-import {
-  CarOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+import { CarOutlined, CheckOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
-const OrderSummaryCard = ({
-  order,
-  onUpdateStatus,
-  onViewDetails,
-}) => {
+const SummaryRow = ({ label, value }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text type="secondary" style={{ fontSize: 14 }}>
+      {label}
+    </Text>
+    {typeof value === 'string' || typeof value === 'number' ? (
+      <Text style={{ fontSize: 14 }}>{value}</Text>
+    ) : (
+      value
+    )}
+  </div>
+);
+
+const OrderSummaryCard = ({ order, onUpdateStatus, onViewDetails }) => {
   const calculations = useMemo(() => {
     if (!order) {
       return {
@@ -41,16 +45,13 @@ const OrderSummaryCard = ({
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const calculatedSubtotal = items.length > 0
       ? items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      : (Number(order.total) || 0);
+      : Number(order.total) || 0;
 
     const shippingFee = Number(order.shippingFee) || 0;
     const discount = Number(order.discount) || 0;
     const total = order.total !== undefined ? Number(order.total) : calculatedSubtotal + shippingFee - discount;
     const shippingMethod = order.shippingMethod || order.deliveryMethod || 'Giao hàng tiêu chuẩn';
-
-    const isFinished = order.status === 'success' || order.status === 'completed';
-    const isCancelled = order.status === 'cancelled';
-    const isActionDisabled = isFinished || isCancelled;
+    const isActionDisabled = order.status === 'success' || order.status === 'completed' || order.status === 'cancelled';
 
     return {
       items,
@@ -81,6 +82,11 @@ const OrderSummaryCard = ({
     );
   }
 
+  const orderStatus = (order.status || 'pending').toLowerCase();
+  const isProcessing = orderStatus === 'processing';
+  const isSuccess = orderStatus === 'success' || orderStatus === 'completed';
+  const isCancelled = orderStatus === 'cancelled';
+
   return (
     <Card
       style={{
@@ -92,14 +98,7 @@ const OrderSummaryCard = ({
       }}
       styles={{ body: { padding: 24 } }}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Title level={5} style={{ margin: 0, fontWeight: 700 }}>
           Thông tin đơn hàng
         </Title>
@@ -149,14 +148,10 @@ const OrderSummaryCard = ({
                 >
                   {item.name}
                 </div>
-                <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
-                  {item.brand}
-                </div>
+                <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>{item.brand}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ color: '#595959', fontSize: 13 }}>
-                  x{item.quantity}
-                </div>
+                <div style={{ color: '#595959', fontSize: 13 }}>x{item.quantity}</div>
                 <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a', marginTop: 2 }}>
                   {item.price.toLocaleString('vi-VN')}đ
                 </div>
@@ -173,28 +168,19 @@ const OrderSummaryCard = ({
       <Divider style={{ margin: '16px 0' }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Tạm tính</Text>
-          <Text style={{ fontSize: 14 }}>{calculations.subtotal.toLocaleString('vi-VN')}đ</Text>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Phí vận chuyển</Text>
-          {calculations.shippingFee === 0 ? (
-            <span style={{ color: '#52c41a', fontWeight: 600, fontSize: 14 }}>Miễn phí</span>
-          ) : (
-            <Text style={{ fontSize: 14 }}>{calculations.shippingFee.toLocaleString('vi-VN')}đ</Text>
-          )}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Giảm giá</Text>
-          <Text style={{ fontSize: 14 }}>
-            - {calculations.discount.toLocaleString('vi-VN')}đ
-          </Text>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>Phương thức giao hàng</Text>
-          <Text style={{ fontSize: 14 }}>{calculations.shippingMethod}</Text>
-        </div>
+        <SummaryRow label="Tạm tính" value={`${calculations.subtotal.toLocaleString('vi-VN')}đ`} />
+        <SummaryRow
+          label="Phí vận chuyển"
+          value={
+            calculations.shippingFee === 0 ? (
+              <span style={{ color: '#52c41a', fontWeight: 600, fontSize: 14 }}>Miễn phí</span>
+            ) : (
+              `${calculations.shippingFee.toLocaleString('vi-VN')}đ`
+            )
+          }
+        />
+        <SummaryRow label="Giảm giá" value={`- ${calculations.discount.toLocaleString('vi-VN')}đ`} />
+        <SummaryRow label="Phương thức giao hàng" value={calculations.shippingMethod} />
       </div>
 
       <Divider style={{ margin: '16px 0' }} />
@@ -224,63 +210,52 @@ const OrderSummaryCard = ({
           <div style={{ fontWeight: 600, color: '#001529', fontSize: 13 }}>
             Thời gian giao hàng dự kiến
           </div>
-          <div style={{ color: '#595959', fontSize: 12, marginTop: 2 }}>
-            2 - 5 ngày làm việc
-          </div>
+          <div style={{ color: '#595959', fontSize: 12, marginTop: 2 }}>2 - 5 ngày làm việc</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-        <Popconfirm
-          title="Từ chối đơn hàng"
-          description="Bạn có chắc chắn muốn từ chối đơn hàng này?"
-          onConfirm={(e) => onUpdateStatus(order.id, 'cancelled', e)}
-          okText="Từ chối"
-          cancelText="Hủy"
-          okButtonProps={{ danger: true }}
-          disabled={calculations.isActionDisabled}
-        >
-          <Button
-            danger
-            size="large"
-            icon={<CloseOutlined />}
-            disabled={calculations.isActionDisabled}
-            style={{ flex: 1, borderRadius: 8 }}
+      {!isSuccess && !isCancelled && (
+        <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+          <Popconfirm
+            title="Từ chối đơn hàng"
+            description="Bạn có chắc chắn muốn từ chối đơn hàng này?"
+            onConfirm={(e) => onUpdateStatus(order.id, 'cancelled', e)}
+            okText="Từ chối"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
           >
-            Từ chối
-          </Button>
-        </Popconfirm>
+            <Button danger size="large" icon={<CloseOutlined />} style={{ flex: 1, borderRadius: 8 }}>
+              Từ chối
+            </Button>
+          </Popconfirm>
 
-        <Popconfirm
-          title="Xác nhận đơn hàng"
-          description="Bạn có chắc chắn muốn xác nhận đơn hàng này?"
-          onConfirm={(e) =>
-            onUpdateStatus(
-              order.id,
-              order.status === 'pending' ? 'processing' : 'success',
-              e
-            )
-          }
-          okText="Đồng ý"
-          cancelText="Hủy"
-          disabled={calculations.isActionDisabled}
-        >
-          <Button
-            type="primary"
-            size="large"
-            icon={<CheckOutlined />}
-            disabled={calculations.isActionDisabled}
-            style={{
-              flex: 1,
-              borderRadius: 8,
-              backgroundColor: calculations.isActionDisabled ? undefined : '#1677ff',
-              borderColor: calculations.isActionDisabled ? undefined : '#1677ff',
-            }}
+          <Popconfirm
+            title={isProcessing ? 'Xác nhận thành công' : 'Xác nhận đơn hàng'}
+            description={
+              isProcessing
+                ? 'Xác nhận đơn hàng này đã hoàn tất thành công?'
+                : 'Bạn có chắc chắn muốn xác nhận đơn hàng này?'
+            }
+            onConfirm={(e) => onUpdateStatus(order.id, isProcessing ? 'success' : 'processing', e)}
+            okText="Đồng ý"
+            cancelText="Hủy"
           >
-            Xác nhận
-          </Button>
-        </Popconfirm>
-      </div>
+            <Button
+              type="primary"
+              size="large"
+              icon={<CheckOutlined />}
+              style={{
+                flex: 1,
+                borderRadius: 8,
+                backgroundColor: isProcessing ? '#52c41a' : '#1677ff',
+                borderColor: isProcessing ? '#52c41a' : '#1677ff',
+              }}
+            >
+              {isProcessing ? 'Xác nhận thành công' : 'Xác nhận đơn'}
+            </Button>
+          </Popconfirm>
+        </div>
+      )}
 
       <div style={{ textAlign: 'center', marginTop: 14 }}>
         <Button

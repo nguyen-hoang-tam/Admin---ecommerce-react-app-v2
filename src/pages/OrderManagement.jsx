@@ -7,18 +7,20 @@ import {
   Button,
   Input,
   Select,
+  DatePicker,
   message,
   Tooltip,
   Row,
   Col,
   Card,
 } from 'antd';
+import dayjs from 'dayjs';
 import {
   SearchOutlined,
   ReloadOutlined,
   CopyOutlined,
 } from '@ant-design/icons';
-import OrderDetailModal from '../components/orders/OrderDetailModal';
+import OrderDetailModal from '../components/modal/OrderDetailModal';
 import OrderSummaryCard from '../components/card/OrderSummaryCard';
 
 import { db } from '../lib/firebase';
@@ -26,12 +28,14 @@ import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [dateRange, setDateRange] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -72,6 +76,7 @@ const OrderManagement = () => {
   const handleReset = () => {
     setSearchTerm('');
     setStatusFilter('ALL');
+    setDateRange(null);
     fetchOrders();
   };
 
@@ -86,6 +91,8 @@ const OrderManagement = () => {
       message.success(
         newStatus === 'cancelled'
           ? 'Đã từ chối đơn hàng'
+          : newStatus === 'success'
+          ? 'Đã xác nhận thành công đơn hàng'
           : 'Đã xác nhận đơn hàng'
       );
       setOrders((prev) =>
@@ -123,9 +130,9 @@ const OrderManagement = () => {
   const renderStatusTag = (status) => {
     const s = String(status || '').toLowerCase();
     const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none', color: '#fff', fontWeight: 500 };
-    if (s === 'pending') return <Tag bordered={false} color="#fa8c16" style={tagStyle}>Chờ xử lý</Tag>;
+    if (s === 'pending') return <Tag bordered={false} color="#fa8c16" style={tagStyle}>Chờ xác nhận</Tag>;
+    if (s === 'processing') return <Tag bordered={false} color="#1677ff" style={tagStyle}>Chờ xử lý</Tag>;
     if (s === 'success' || s === 'completed') return <Tag bordered={false} color="#52c41a" style={tagStyle}>Thành công</Tag>;
-    if (s === 'processing') return <Tag bordered={false} color="#1677ff" style={tagStyle}>Đang xử lý</Tag>;
     if (s === 'cancelled') return <Tag bordered={false} color="#ff4d4f" style={tagStyle}>Đã hủy</Tag>;
     return <Tag bordered={false} color="#8c8c8c" style={tagStyle}>{status}</Tag>;
   };
@@ -137,6 +144,30 @@ const OrderManagement = () => {
 
       const matchesStatus = statusFilter === 'ALL' || s === statusFilter.toLowerCase();
       if (!matchesStatus) return false;
+
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        let orderDate = null;
+        const val = order.createdAt;
+        if (val) {
+          if (typeof val.toDate === 'function') {
+            orderDate = val.toDate();
+          } else if (val.seconds) {
+            orderDate = new Date(val.seconds * 1000);
+          } else {
+            orderDate = new Date(val);
+          }
+        }
+        if (!orderDate || isNaN(orderDate.getTime())) {
+          return false;
+        }
+        const start = dateRange[0].startOf('day').valueOf();
+        const end = dateRange[1].endOf('day').valueOf();
+        const orderTime = orderDate.getTime();
+        if (orderTime < start || orderTime > end) {
+          return false;
+        }
+      }
+
       if (!search) return true;
 
       const id = String(order.id || '').toLowerCase();
@@ -146,7 +177,7 @@ const OrderManagement = () => {
 
       return id.includes(search) || name.includes(search) || phone.includes(search) || email.includes(search);
     });
-  }, [orders, statusFilter, searchTerm]);
+  }, [orders, statusFilter, searchTerm, dateRange]);
 
   useEffect(() => {
     if (filteredOrders.length > 0) {
@@ -210,7 +241,17 @@ const OrderManagement = () => {
       title: 'Ngày đặt',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 140,
+      width: 150,
+      sorter: (a, b) => {
+        const getTime = (val) => {
+          if (!val) return 0;
+          if (typeof val.toDate === 'function') return val.toDate().getTime();
+          if (val.seconds) return val.seconds * 1000;
+          const d = new Date(val);
+          return isNaN(d.getTime()) ? 0 : d.getTime();
+        };
+        return getTime(a.createdAt) - getTime(b.createdAt);
+      },
       render: (val) => <Text>{formatDate(val)}</Text>,
     },
     {
@@ -270,11 +311,11 @@ const OrderManagement = () => {
               </Title>
               <Space wrap size="middle">
                 <Input
-                  placeholder="Tìm theo mã đơn, tên hoặc SĐT..."
+                  placeholder="Tìm mã đơn, tên, SĐT..."
                   prefix={<SearchOutlined />}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ width: 240 }}
+                  style={{ width: 220 }}
                   allowClear
                 />
                 <Select
@@ -283,11 +324,25 @@ const OrderManagement = () => {
                   style={{ width: 170 }}
                 >
                   <Option value="ALL">Tất cả trạng thái</Option>
-                  <Option value="pending">Chờ xử lý (pending)</Option>
-                  <Option value="processing">Đang xử lý (processing)</Option>
-                  <Option value="success">Thành công (success)</Option>
-                  <Option value="cancelled">Đã hủy (cancelled)</Option>
+                  <Option value="pending">Chờ xác nhận</Option>
+                  <Option value="processing">Chờ xử lý</Option>
+                  <Option value="success">Thành công</Option>
+                  <Option value="cancelled">Đã hủy</Option>
                 </Select>
+                <RangePicker
+                  value={dateRange}
+                  onChange={(dates) => setDateRange(dates)}
+                  format="DD/MM/YYYY"
+                  placeholder={['Từ ngày', 'Đến ngày']}
+                  style={{ width: 240 }}
+                  allowClear
+                  presets={[
+                    { label: 'Hôm nay', value: [dayjs().startOf('day'), dayjs().endOf('day')] },
+                    { label: '7 ngày qua', value: [dayjs().subtract(7, 'day').startOf('day'), dayjs().endOf('day')] },
+                    { label: '30 ngày qua', value: [dayjs().subtract(30, 'day').startOf('day'), dayjs().endOf('day')] },
+                    { label: 'Tháng này', value: [dayjs().startOf('month'), dayjs().endOf('month')] },
+                  ]}
+                />
                 <Button icon={<ReloadOutlined />} onClick={handleReset}>
                   Làm mới
                 </Button>
