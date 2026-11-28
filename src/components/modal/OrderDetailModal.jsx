@@ -3,10 +3,6 @@ import { Modal, Button, Typography, Tag, Row, Col, Table, Tooltip, Image, messag
 import {
   FileTextOutlined,
   CopyOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  SyncOutlined,
-  CloseCircleOutlined,
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -14,65 +10,39 @@ import {
   HomeOutlined,
   DollarOutlined,
 } from '@ant-design/icons';
+import { InfoCard, IconTextRow, PriceRow } from '../card/InfoCard';
+import OrderStatusTag from '../common/OrderStatusTag';
 
 const { Text } = Typography;
 
-const InfoCard = ({ icon, title, children }) => (
-  <div style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: 8, border: '1px solid #f0f0f0', height: '100%' }}>
-    <div style={{ fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6, color: '#1a1a1a' }}>
-      {icon} {title}
-    </div>
-    {children}
-  </div>
-);
+const formatVND = (num) => `${Number(num || 0).toLocaleString('vi-VN')} ₫`;
 
-const IconText = ({ icon, text, style }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...style }}>
-    {icon}
-    <Text style={{ fontSize: 13 }}>{text}</Text>
-  </div>
-);
-
-const PriceRow = ({ label, value }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}>
-    <Text type="secondary">{label}</Text>
-    <Text>{value}</Text>
-  </div>
-);
+const formatDate = (val) => {
+  if (!val) return '—';
+  if (typeof val === 'string' && val.includes('/')) return val;
+  const d = val?.toDate?.() || (val?.seconds ? new Date(val.seconds * 1000) : new Date(val));
+  if (isNaN(d.getTime())) return String(val);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 const OrderDetailModal = ({ open, onClose, order }) => {
   const orderId = order?.id || '—';
-
-  const formatDate = (val) => {
-    if (!val) return '—';
-    if (typeof val === 'string' && val.includes('/')) return val;
-    let date;
-    if (typeof val.toDate === 'function') {
-      date = val.toDate();
-    } else if (val.seconds) {
-      date = new Date(val.seconds * 1000);
-    } else {
-      date = new Date(val);
-    }
-    if (isNaN(date.getTime())) return String(val);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  };
-
   const orderDate = formatDate(order?.createdAt);
   const status = (order?.status || 'pending').toLowerCase();
   const paymentMethod = order?.paymentMethod || 'Chưa xác định';
+  const addr = order?.shippingAddress || {};
 
   const customerEmail =
-    order?.shippingAddress?.email ||
+    addr.email ||
     order?.customerEmail ||
     order?.email ||
     order?.userEmail ||
-    (order?.shippingAddress?.name?.includes('@') ? order?.shippingAddress?.name : '') ||
+    (addr.name?.includes('@') ? addr.name : '') ||
     '—';
-  const customerPhone = order?.shippingAddress?.phone || order?.customerPhone || order?.phone || '—';
-  const shippingName = order?.shippingAddress?.name || order?.customerName || '—';
-  const shippingAddress = order?.shippingAddress?.address || '—';
+  const customerPhone = addr.phone || order?.customerPhone || order?.phone || '—';
+  const shippingName = addr.name || order?.customerName || '—';
+  const shippingAddress = addr.address || order?.address || '—';
 
   const items = Array.isArray(order?.items)
     ? order.items.map((item, idx) => ({
@@ -90,27 +60,22 @@ const OrderDetailModal = ({ open, onClose, order }) => {
   const discount = Number(order?.discount) || 0;
   const total = order?.total !== undefined ? Number(order.total) : subtotal + shippingFee - discount;
 
-  const renderStatusTag = () => {
-    const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none', color: '#fff', fontWeight: 500 };
-    if (status === 'pending') {
-      return <Tag bordered={false} color="#fa8c16" icon={<ClockCircleOutlined style={{ color: '#fff' }} />} style={tagStyle}>Chờ xác nhận</Tag>;
-    }
-    if (status === 'processing') {
-      return <Tag bordered={false} color="#1677ff" icon={<SyncOutlined spin style={{ color: '#fff' }} />} style={tagStyle}>Chờ xử lý</Tag>;
-    }
-    if (status === 'success' || status === 'completed') {
-      return <Tag bordered={false} color="#52c41a" icon={<CheckCircleOutlined style={{ color: '#fff' }} />} style={tagStyle}>Thành công</Tag>;
-    }
-    return <Tag bordered={false} color="#ff4d4f" icon={<CloseCircleOutlined style={{ color: '#fff' }} />} style={tagStyle}>Đã hủy</Tag>;
-  };
-
   const columns = [
     {
       title: 'Hình ảnh',
       dataIndex: 'image',
       key: 'image',
       width: 80,
-      render: (src) => <Image src={src} width={48} height={48} fallback="https://via.placeholder.com/48" style={{ objectFit: 'cover', borderRadius: 6 }} />,
+      render: (src) => (
+        <Image
+          src={src}
+          width={48}
+          height={48}
+          fallback="https://via.placeholder.com/48"
+          preview={false}
+          style={{ objectFit: 'cover', borderRadius: 6, backgroundColor: '#f5f5f5' }}
+        />
+      ),
     },
     {
       title: 'Sản phẩm',
@@ -129,19 +94,22 @@ const OrderDetailModal = ({ open, onClose, order }) => {
       dataIndex: 'quantity',
       key: 'quantity',
       align: 'center',
+      width: 90,
     },
     {
       title: 'Đơn giá',
       dataIndex: 'price',
       key: 'price',
       align: 'right',
-      render: (price) => `${Number(price).toLocaleString('vi-VN')} ₫`,
+      width: 120,
+      render: formatVND,
     },
     {
       title: 'Thành tiền',
       key: 'total',
       align: 'right',
-      render: (_, record) => <Text strong>{Number(record.price * record.quantity).toLocaleString('vi-VN')} ₫</Text>,
+      width: 130,
+      render: (_, record) => <Text strong>{formatVND(record.price * record.quantity)}</Text>,
     },
   ];
 
@@ -210,22 +178,22 @@ const OrderDetailModal = ({ open, onClose, order }) => {
 
           <div>
             <Text type="secondary" style={{ fontSize: 12 }}>Trạng thái</Text>
-            <div>{renderStatusTag()}</div>
+            <div><OrderStatusTag status={status} /></div>
           </div>
         </div>
 
         <Row gutter={16} style={{ marginBottom: 20 }}>
           <Col xs={24} sm={12}>
             <InfoCard icon={<UserOutlined />} title="Thông tin khách hàng">
-              <IconText icon={<MailOutlined style={{ color: '#8c8c8c' }} />} text={customerEmail} style={{ marginBottom: 6 }} />
-              <IconText icon={<PhoneOutlined style={{ color: '#8c8c8c' }} />} text={customerPhone} />
+              <IconTextRow icon={<MailOutlined style={{ color: '#8c8c8c' }} />} text={customerEmail} style={{ marginBottom: 6 }} />
+              <IconTextRow icon={<PhoneOutlined style={{ color: '#8c8c8c' }} />} text={customerPhone} />
             </InfoCard>
           </Col>
 
           <Col xs={24} sm={12}>
             <InfoCard icon={<EnvironmentOutlined />} title="Địa chỉ giao hàng">
-              <IconText icon={<UserOutlined style={{ color: '#8c8c8c' }} />} text={shippingName} style={{ marginBottom: 6 }} />
-              <IconText icon={<HomeOutlined style={{ color: '#8c8c8c' }} />} text={shippingAddress} />
+              <IconTextRow icon={<UserOutlined style={{ color: '#8c8c8c' }} />} text={shippingName} style={{ marginBottom: 6 }} />
+              <IconTextRow icon={<HomeOutlined style={{ color: '#8c8c8c' }} />} text={shippingAddress} />
             </InfoCard>
           </Col>
         </Row>
@@ -243,13 +211,10 @@ const OrderDetailModal = ({ open, onClose, order }) => {
 
           <Col xs={24} sm={12}>
             <InfoCard icon={<DollarOutlined />} title="Tổng thanh toán">
-              <PriceRow label="Tạm tính" value={`${subtotal.toLocaleString('vi-VN')} ₫`} />
-              <PriceRow label="Phí vận chuyển" value={`${shippingFee.toLocaleString('vi-VN')} ₫`} />
-              <PriceRow label="Giảm giá" value={`${discount.toLocaleString('vi-VN')} ₫`} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
-                <Text strong style={{ fontSize: 14 }}>Tổng tiền</Text>
-                <Text strong style={{ fontSize: 18, color: '#cf1322' }}>{total.toLocaleString('vi-VN')} ₫</Text>
-              </div>
+              <PriceRow label="Tạm tính" value={formatVND(subtotal)} />
+              <PriceRow label="Phí vận chuyển" value={formatVND(shippingFee)} />
+              <PriceRow label="Giảm giá" value={discount > 0 ? `-${formatVND(discount)}` : formatVND(0)} />
+              <PriceRow label="Tổng tiền" value={formatVND(total)} isTotal />
             </InfoCard>
           </Col>
         </Row>

@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons';
 import OrderDetailModal from '../components/modal/OrderDetailModal';
 import OrderSummaryCard from '../components/card/OrderSummaryCard';
+import OrderStatusTag from '../components/common/OrderStatusTag';
 
 import { db } from '../lib/firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
@@ -92,8 +93,8 @@ const OrderManagement = () => {
         newStatus === 'cancelled'
           ? 'Đã từ chối đơn hàng'
           : newStatus === 'success'
-          ? 'Đã xác nhận thành công đơn hàng'
-          : 'Đã xác nhận đơn hàng'
+            ? 'Đã xác nhận thành công đơn hàng'
+            : 'Đã xác nhận đơn hàng'
       );
       setOrders((prev) =>
         prev.map((ord) => (ord.id === orderId ? { ...ord, status: newStatus } : ord))
@@ -125,16 +126,6 @@ const OrderManagement = () => {
     const h = pad(date.getHours());
     const min = pad(date.getMinutes());
     return `${d}/${m}/${y} ${h}:${min}`;
-  };
-
-  const renderStatusTag = (status) => {
-    const s = String(status || '').toLowerCase();
-    const tagStyle = { padding: '4px 12px', fontSize: 13, borderRadius: 12, border: 'none', color: '#fff', fontWeight: 500 };
-    if (s === 'pending') return <Tag bordered={false} color="#fa8c16" style={tagStyle}>Chờ xác nhận</Tag>;
-    if (s === 'processing') return <Tag bordered={false} color="#1677ff" style={tagStyle}>Chờ xử lý</Tag>;
-    if (s === 'success' || s === 'completed') return <Tag bordered={false} color="#52c41a" style={tagStyle}>Thành công</Tag>;
-    if (s === 'cancelled') return <Tag bordered={false} color="#ff4d4f" style={tagStyle}>Đã hủy</Tag>;
-    return <Tag bordered={false} color="#8c8c8c" style={tagStyle}>{status}</Tag>;
   };
 
   const filteredOrders = useMemo(() => {
@@ -272,7 +263,7 @@ const OrderManagement = () => {
       title: 'Phương thức thanh toán',
       dataIndex: 'paymentMethod',
       key: 'paymentMethod',
-      width: 160,
+      width: 200,
       render: (method) => <Text>{method || 'Chưa xác định'}</Text>,
     },
     {
@@ -280,7 +271,7 @@ const OrderManagement = () => {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status) => renderStatusTag(status),
+      render: (status) => <OrderStatusTag status={status} />,
     },
   ];
 
@@ -354,7 +345,7 @@ const OrderManagement = () => {
               dataSource={filteredOrders}
               loading={loading}
               pagination={{ pageSize: 10 }}
-              scroll={{ x: 730 }}
+              scroll={{ x: 770 }}
               rowClassName={(record) => (record.id === selectedOrder?.id ? 'active-order-row' : '')}
               onRow={(record) => ({
                 onClick: () => {
