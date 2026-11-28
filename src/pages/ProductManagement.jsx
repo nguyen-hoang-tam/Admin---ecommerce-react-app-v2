@@ -7,7 +7,7 @@ import { collection, getDocs, onSnapshot, deleteDoc, doc } from 'firebase/firest
 
 import AddProductModal from '../components/modal/AddProductModal';
 import JsonViewer from '../components/common/JsonViewer';
-import { addProductAPI } from '../features/addProduct/product';
+import { addProductAPI, updateProductAPI } from '../features/addProduct/product';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -18,6 +18,7 @@ const ProductManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
 
   const processProductsData = (snapshot) => {
     const productsData = [];
@@ -68,21 +69,20 @@ const ProductManagement = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleAddProduct = async (values) => {
+  const handleSubmitProduct = async (values) => {
     try {
-      await addProductAPI(values);
-      message.success('Thêm sản phẩm thành công!');
-      fetchProducts();
-      return true;
-    } catch (error) {
-      console.error('Lỗi thêm sản phẩm: ', error);
-      if (error?.code === 'permission-denied') {
-        message.error('Lỗi phân quyền Firestore: Bạn không có quyền thêm sản phẩm (permission-denied)! Vui lòng kiểm tra Firestore Rules.');
-      } else if (error?.message && error.message.includes('maximum allowed size')) {
-        message.error('Lỗi: Kích thước hình ảnh quá lớn vượt quá giới hạn 1MB của Firestore!');
+      if (editingProduct) {
+        await updateProductAPI(editingProduct.id, values);
+        message.success('Cập nhật sản phẩm thành công!');
       } else {
-        message.error(`Không thể thêm sản phẩm: ${error?.message || error?.code || 'Lỗi không xác định'}`);
+        await addProductAPI(values);
+        message.success('Thêm sản phẩm thành công!');
       }
+      setEditingProduct(null);
+      fetchProducts();
+    } catch (error) {
+      console.error('Lỗi lưu sản phẩm: ', error);
+      message.error('Thao tác thất bại: ' + (error?.message || 'Có lỗi xảy ra'));
       throw error;
     }
   };
@@ -98,8 +98,9 @@ const ProductManagement = () => {
     }
   };
 
-  const handleEditProduct = (product) => {
-    message.info(`Chức năng chỉnh sửa đang hoàn thiện cho: ${product.name}`);
+  const handleOpenEdit = (record) => {
+    setEditingProduct(record);
+    setAddModalVisible(true);
   };
 
   const filteredProducts = useMemo(() => {
@@ -162,16 +163,6 @@ const ProductManagement = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <Text strong style={{ fontSize: 14 }}>{text}</Text>
-            {record.isNew && (
-              <Tag bordered={false} color="cyan" style={{ fontSize: 11, padding: '0 6px', borderRadius: 4 }}>
-                Mới
-              </Tag>
-            )}
-            {record.isBestSeller && (
-              <Tag bordered={false} color="gold" style={{ fontSize: 11, padding: '0 6px', borderRadius: 4 }}>
-                Bán chạy
-              </Tag>
-            )}
           </div>
           {record.description && (
             <div
@@ -305,10 +296,10 @@ const ProductManagement = () => {
         <Space size="small">
           <Button
             type="default"
-            size="small"
+            size="middle"
             icon={<EditOutlined style={{ color: '#040404' }} />}
             style={{ backgroundColor: '#ffffff', borderColor: '#d9d9d9', borderRadius: 6 }}
-            onClick={() => handleEditProduct(record)}
+            onClick={() => handleOpenEdit(record)}
           >
             Sửa
           </Button>
@@ -323,7 +314,7 @@ const ProductManagement = () => {
             <Button
               type="primary"
               danger
-              size="small"
+              size="middle"
               icon={<DeleteOutlined />}
               style={{ borderRadius: 6 }}
             >
@@ -390,7 +381,10 @@ const ProductManagement = () => {
               Làm mới
             </Button>
             <Button
-              onClick={() => setAddModalVisible(true)}
+              onClick={() => {
+                setEditingProduct(null);
+                setAddModalVisible(true);
+              }}
               type="primary"
               icon={<PlusOutlined />}
             >
@@ -420,9 +414,13 @@ const ProductManagement = () => {
 
       <AddProductModal
         open={addModalVisible}
-        onClose={() => setAddModalVisible(false)}
-        onSubmit={handleAddProduct}
+        onClose={() => {
+          setAddModalVisible(false);
+          setEditingProduct(null);
+        }}
+        onSubmit={handleSubmitProduct}
         categories={categories}
+        initialData={editingProduct}
       />
     </div>
   );
